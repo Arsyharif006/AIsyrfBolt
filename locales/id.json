@@ -40,7 +40,7 @@
   "languageDescription": "Pilih bahasa untuk antarmuka aplikasi.",
   "aboutTitle": "Tentang {appName}",
   "aboutVersion": "Versi-Beta",
-  "aboutDescription": "Antarmuka obrolan yang modern dan responsif, dibuat khusus untuk percakapan seputar koding. Terhubung dengan webhook n8n untuk pengalaman interaktif yang mulus. Hadir dengan tema gelap, tampilan blok kode yang rapi, dan desain sederhana yang nyaman digunakan, terinspirasi dari alat-alat AI masa kini.",
+  "aboutDescription": "Antarmuka obrolan yang modern dan responsif, dibuat khusus untuk percakapan seputar koding. Terhubung dengan webhook typescript untuk pengalaman interaktif yang mulus. Hadir dengan tema gelap, tampilan blok kode yang rapi, dan desain sederhana yang nyaman digunakan, terinspirasi dari alat-alat AI masa kini.",
   "expandSidebar": "Perluas sidebar",
   "collapseSidebar": "Ciutkan sidebar",
   "closeMenu": "Tutup menu",

@@ -40,7 +40,7 @@
   "languageDescription": "Choose the language for the application interface.",
   "aboutTitle": "About {appName}",
   "aboutVersion": "Beta-Version",
-  "aboutDescription": "A modern, responsive chat interface designed for coding discussions. Powered by n8n webhooks for a smooth, interactive experience. It features a dark theme, clean code block highlighting, and a simple, user-friendly design inspired by today`s AI tools.",
+  "aboutDescription": "A modern, responsive chat interface designed for coding discussions. Powered by typescript webhooks for a smooth, interactive experience. It features a dark theme, clean code block highlighting, and a simple, user-friendly design inspired by today`s AI tools.",
   "expandSidebar": "Expand sidebar",
   "collapseSidebar": "Collapse sidebar",
   "closeMenu": "Close menu",
