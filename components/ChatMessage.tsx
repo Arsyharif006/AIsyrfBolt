@@ -4,6 +4,7 @@ import { FiUser, FiRefreshCw, FiEdit3, FiCheck, FiX } from 'react-icons/fi';
 import { CodeBlock } from './CodeBlock';
 import { Table } from './Table';
 import { useLocalization } from '../contexts/LocalizationContext';
+import icon from './images/icon.png';
 
 interface ChatMessageProps {
   message: Message;
@@ -350,7 +351,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className="flex items-start gap-3 sm:gap-4">
         <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
           <img
-            src="./components/images/icon.png"
+             src={icon} 
             alt="AI"
             className="w-full h-full object-cover"
           />
@@ -373,7 +374,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     <div className="flex items-start gap-3 sm:gap-4">
       <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
         <img
-          src="./components/images/icon.png"
+          src={icon} 
           alt="AI"
           className="w-full h-full object-cover"
         />
