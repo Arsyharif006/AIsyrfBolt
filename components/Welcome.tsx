@@ -23,7 +23,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onPromptClick }) => {
     <div className="flex flex-col items-center justify-center h-full text-center">
         <div className="mb-8">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 ring-4 ring-gray-700 overflow-hidden">
-                <img src="../components/images/icon.png" alt={appName} className="w-full h-full object-cover" />
+                <img src="./components/images/icon.png" alt={appName} className="w-full h-full object-cover" />
             </div>
             <h1 className="text-4xl font-bold text-white">{t('welcomeTitle', { appName })}</h1>
             <p className="text-gray-400 mt-2">{t('welcomeSubtitle')}</p>
