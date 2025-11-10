@@ -22,7 +22,7 @@ const parseAiResponse = (text: string) => {
   if (!text) return [];
 
   const components: { type: 'text' | 'code' | 'table'; content: any }[] = [];
-  
+
   // Deteksi tabel dengan lebih akurat
   const tableRegex = /(\|[^\n]+\|\n\|[\s:|-]+\|\n(?:\|[^\n]+\|\n?)+)/g;
   let lastIndex = 0;
@@ -37,7 +37,7 @@ const parseAiResponse = (text: string) => {
         const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
         let codeMatch;
         let textLastIndex = 0;
-        
+
         while ((codeMatch = codeBlockRegex.exec(beforeText)) !== null) {
           // Add text before code block
           if (codeMatch.index > textLastIndex) {
@@ -53,16 +53,16 @@ const parseAiResponse = (text: string) => {
               }
             }
           }
-          
+
           // Add code block
           components.push({
             type: 'code',
             content: { language: codeMatch[1], code: codeMatch[2].trim() },
           });
-          
+
           textLastIndex = codeMatch.index + codeMatch[0].length;
         }
-        
+
         // Add remaining text after last code block
         if (textLastIndex < beforeText.length) {
           const textPart = beforeText.substring(textLastIndex).trim();
@@ -84,17 +84,17 @@ const parseAiResponse = (text: string) => {
     try {
       const tableText = match[1];
       const lines = tableText.trim().split('\n').filter(line => line.trim());
-      
+
       if (lines.length >= 2) {
         // Header
         const headers = lines[0]
           .split('|')
           .map(h => h.trim())
           .filter(Boolean);
-        
+
         // Data rows (skip separator line)
         const rows = lines.slice(2)
-          .map(row => 
+          .map(row =>
             row.split('|')
               .map(c => c.trim())
               .filter(Boolean)
@@ -120,7 +120,7 @@ const parseAiResponse = (text: string) => {
       const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
       let codeMatch;
       let textLastIndex = 0;
-      
+
       while ((codeMatch = codeBlockRegex.exec(afterText)) !== null) {
         // Add text before code block
         if (codeMatch.index > textLastIndex) {
@@ -136,16 +136,16 @@ const parseAiResponse = (text: string) => {
             }
           }
         }
-        
+
         // Add code block
         components.push({
           type: 'code',
           content: { language: codeMatch[1], code: codeMatch[2].trim() },
         });
-        
+
         textLastIndex = codeMatch.index + codeMatch[0].length;
       }
-      
+
       // Add remaining text
       if (textLastIndex < afterText.length) {
         const textPart = afterText.substring(textLastIndex).trim();
@@ -239,11 +239,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className="flex flex-col items-end gap-2">
         <div className="flex items-start gap-3 sm:gap-4 justify-end w-full">
           <div
-            className={`transition-all duration-200 ${
-              isEditingLocal
-                ? 'w-full sm:w-3/4 bg-blue-700/70' 
+            className={`transition-all duration-200 ${isEditingLocal
+                ? 'w-full sm:w-3/4 bg-blue-700/70'
                 : 'max-w-[85%] sm:max-w-xl lg:max-w-3xl bg-blue-600'
-            } px-4 sm:px-5 py-3 rounded-2xl rounded-br-none group relative`}
+              } px-4 sm:px-5 py-3 rounded-2xl rounded-br-none group relative`}
           >
             {isEditingLocal ? (
               <div className="flex flex-col gap-3">
@@ -283,11 +282,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               onClick={() => onResendMessage(message.text)}
               title="Resend"
               disabled={anyEditingActive}
-              className={`hidden sm:block absolute -left-10 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${
-                anyEditingActive
+              className={`hidden sm:block absolute -left-10 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${anyEditingActive
                   ? 'opacity-40 cursor-not-allowed'
                   : 'opacity-0 group-hover:opacity-100 hover:bg-gray-700 text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               <FiRefreshCw size={16} />
             </button>
@@ -297,11 +295,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 onClick={startEditing}
                 title="Edit"
                 disabled={anyEditingActive}
-                className={`hidden sm:block absolute -left-10 top-[65%] p-1.5 rounded-full transition ${
-                  anyEditingActive
+                className={`hidden sm:block absolute -left-10 top-[65%] p-1.5 rounded-full transition ${anyEditingActive
                     ? 'opacity-40 cursor-not-allowed'
                     : 'opacity-0 group-hover:opacity-100 hover:bg-gray-700 text-gray-400 hover:text-white'
-                }`}
+                  }`}
               >
                 <FiEdit3 size={16} />
               </button>
@@ -309,33 +306,31 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           </div>
 
           {/* Avatar User */}
-          <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+          <div className="hidden md:flex w-8 h-8 rounded-full bg-gray-700 items-center justify-center overflow-hidden flex-shrink-0">
             <FiUser size={18} />
           </div>
         </div>
 
         {/* Tombol Mobile - Di Bawah Bubble */}
         {!isEditingLocal && (
-          <div className="flex sm:hidden gap-1.5 mr-11 text-xs">
+          <div className="flex sm:hidden text-xs">
             <button
               onClick={() => onResendMessage(message.text)}
               disabled={anyEditingActive}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition ${
-                anyEditingActive
+              className={`flex items-center px-2.5 py-1.5 rounded-lg transition ${anyEditingActive
                   ? 'opacity-40 cursor-not-allowed text-gray-500'
                   : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
+                }`}
             >
               <FiRefreshCw size={13} />
             </button>
             <button
               onClick={startEditing}
               disabled={anyEditingActive}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition ${
-                anyEditingActive
+              className={`flex items-center px-2.5 py-1.5 rounded-lg transition ${anyEditingActive
                   ? 'opacity-40 cursor-not-allowed text-gray-500'
                   : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
+                }`}
             >
               <FiEdit3 size={13} />
             </button>
@@ -349,9 +344,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   if (isLoading) {
     return (
       <div className="flex items-start gap-3 sm:gap-4">
-        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="hidden md:flex w-8 h-8 rounded-full bg-gray-700 items-center justify-center overflow-hidden flex-shrink-0">
           <img
-             src={icon} 
+            src={icon}
             alt="AI"
             className="w-full h-full object-cover"
           />
@@ -372,14 +367,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   return (
     <div className="flex items-start gap-3 sm:gap-4">
-      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+      <div className="hidden md:flex w-8 h-8 rounded-full bg-gray-700 items-center justify-center overflow-hidden flex-shrink-0">
         <img
-          src={icon} 
+          src={icon}
           alt="AI"
           className="w-full h-full object-cover"
         />
       </div>
-      <div className="max-w-[85%] sm:max-w-xl lg:max-w-3xl w-full px-4 sm:px-5 py-3 rounded-2xl bg-gray-700 rounded-bl-none">
+      <div className="max-w-[100%] sm:max-w-xl lg:max-w-3xl w-full px-4 sm:px-5 py-3 rounded-bl-none">
         <div className="flex flex-col gap-4 text-white text-sm sm:text-base">
           {aiResponseParts.map((part, index) => {
             if (part.type === 'text') {
