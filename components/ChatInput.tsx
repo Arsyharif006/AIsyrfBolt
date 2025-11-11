@@ -24,46 +24,168 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
   // Deteksi bahasa pemrograman dari content
   const detectLanguage = (content: string): string | undefined => {
     const patterns: Record<string, RegExp[]> = {
-      javascript: [/function\s+\w+/, /const\s+\w+\s*=/, /let\s+\w+\s*=/, /=>\s*{/, /import\s+.*from/],
-      typescript: [/interface\s+\w+/, /type\s+\w+\s*=/, /:\s*string/, /:\s*number/, /<.*>/],
-      python: [/def\s+\w+/, /import\s+\w+/, /from\s+\w+\s+import/, /print\(/, /if\s+__name__/],
-      java: [/public\s+class/, /private\s+\w+/, /public\s+static\s+void/, /System\.out\.println/],
-      cpp: [/#include\s*</, /std::/, /cout\s*<</, /namespace\s+/, /int\s+main\(/],
-      c: [/#include\s*</, /printf\(/, /scanf\(/, /int\s+main\(/],
-      html: [/<html>/, /<div/, /<body>/, /<head>/, /<!DOCTYPE/],
-      css: [/\{[^}]*:/, /\.[\w-]+\s*{/, /@media/, /background-color:/],
-      json: [/^[\s]*{/, /"[\w]+"\s*:/, /^\[/],
-      sql: [/SELECT\s+/, /FROM\s+/, /WHERE\s+/, /INSERT\s+INTO/, /CREATE\s+TABLE/i],
+      c: [
+        /#include\s*<stdio\.h>/,
+        /#include\s*<stdlib\.h>/,
+        /#include\s*<string\.h>/,
+        /int\s+main\s*\(\s*(void)?\s*\)/,
+        /printf\s*\(/,
+        /scanf\s*\(/,
+        /void\s+\w+\s*\(/,
+      ],
+      cpp: [
+        /#include\s*<iostream>/,
+        /#include\s*<vector>/,
+        /#include\s*<string>/,
+        /std::/,
+        /cout\s*<</,
+        /cin\s*>>/,
+        /namespace\s+/,
+        /class\s+\w+/,
+      ],
+      java: [
+        /public\s+class\s+\w+/,
+        /private\s+(static\s+)?\w+/,
+        /public\s+static\s+void\s+main/,
+        /System\.out\.println/,
+        /import\s+java\./,
+      ],
+      python: [
+        /def\s+\w+\s*\(/,
+        /import\s+\w+/,
+        /from\s+\w+\s+import/,
+        /print\s*\(/,
+        /if\s+__name__\s*==\s*['"]__main__['"]/,
+        /class\s+\w+\s*:/,
+      ],
+      javascript: [
+        /function\s+\w+\s*\(/,
+        /const\s+\w+\s*=/,
+        /let\s+\w+\s*=/,
+        /var\s+\w+\s*=/,
+        /=>\s*{/,
+        /console\.log\(/,
+        /import\s+.*from\s+['"]/,
+        /export\s+(default|const|function)/,
+      ],
+      typescript: [
+        /interface\s+\w+/,
+        /type\s+\w+\s*=/,
+        /:\s*(string|number|boolean|any)\s*[;,)]/,
+        /import\s+.*from\s+['"].*['"]\s*;/,
+        /<\w+>/,
+        /enum\s+\w+/,
+      ],
+      pascal: [
+        /program\s+\w+\s*;/i,
+        /begin\s*$/mi,
+        /end\s*\./mi,
+        /writeln\s*\(/i,
+        /readln\s*\(/i,
+        /var\s+\w+\s*:\s*(integer|string|real|boolean)/i,
+        /procedure\s+\w+/i,
+        /function\s+\w+.*:\s*\w+/i,
+      ],
+      html: [
+        /<!DOCTYPE\s+html>/i,
+        /<html[^>]*>/,
+        /<head>/,
+        /<body>/,
+        /<div[^>]*>/,
+      ],
+      css: [
+        /\{\s*[^}]*:\s*[^}]*;/,
+        /\.[\w-]+\s*\{/,
+        /@media\s+/,
+        /background(-color)?:/,
+        /\.[\w-]+:hover/,
+      ],
+      json: [
+        /^\s*\{[\s\S]*\}\s*$/,
+        /^\s*\[[\s\S]*\]\s*$/,
+        /"[\w]+"\s*:\s*(".*"|[\d.]+|true|false|null)/,
+      ],
+      sql: [
+        /SELECT\s+/i,
+        /FROM\s+\w+/i,
+        /WHERE\s+/i,
+        /INSERT\s+INTO/i,
+        /CREATE\s+TABLE/i,
+        /UPDATE\s+\w+\s+SET/i,
+      ],
     };
 
+    // Hitung skor untuk setiap bahasa
+    const scores: Record<string, number> = {};
+    
     for (const [lang, regexes] of Object.entries(patterns)) {
-      if (regexes.some(regex => regex.test(content))) {
-        return lang;
+      scores[lang] = 0;
+      for (const regex of regexes) {
+        if (regex.test(content)) {
+          scores[lang]++;
+        }
       }
     }
-    return undefined;
+
+    // Cari bahasa dengan skor tertinggi
+    let maxScore = 0;
+    let detectedLang: string | undefined;
+
+    for (const [lang, score] of Object.entries(scores)) {
+      if (score > maxScore) {
+        maxScore = score;
+        detectedLang = lang;
+      }
+    }
+
+    // Hanya return jika skor minimal 2 (untuk menghindari false positive)
+    return maxScore >= 2 ? detectedLang : undefined;
   };
 
   // Deteksi apakah text adalah code (multi-line atau punya syntax tertentu)
   const isLikelyCode = (content: string): boolean => {
     const lines = content.split('\n');
+    
+    // Minimal 3 baris untuk dianggap code block
     if (lines.length < 3) return false;
 
-    // Cek indikator code
+    // Cek indikator code yang lebih spesifik
     const codeIndicators = [
-      /^[\s]*(function|const|let|var|if|for|while|class|def|import|export)/,
+      // Control structures
+      /^\s*(if|else|for|while|do|switch|case)\s*[\(\{]/,
+      // Function/method declarations
+      /^\s*(function|def|void|int|float|double|char|string|boolean|public|private|protected)\s+\w+/,
+      // Variable declarations
+      /^\s*(const|let|var|int|float|double|char|string|auto)\s+\w+/,
+      // Preprocessor directives
+      /^\s*#(include|define|ifdef|ifndef|endif|pragma)/,
+      // Common programming symbols
       /[{}\[\]();]/,
-      /^\s{2,}/, // Indentasi
-      /\/\/|\/\*|\*\/|#|<!--/, // Comments
-      /=>/,
-      /:$/,
+      // Indentasi konsisten (2+ spasi atau tab)
+      /^\s{2,}[\w\S]/,
+      // Comments
+      /^\s*(\/\/|\/\*|\*\/|#|<!--)/,
+      // Arrow functions
+      /=>\s*[{(]/,
+      // Colon at end (Python, Pascal)
+      /:\s*$/,
+      // Assignment operators
+      /\s*[=+\-*\/]=?\s*/,
+      // Semicolons (C-style languages)
+      /;\s*$/,
+      // Imports/includes
+      /^\s*(import|from|using|include|require)\s+/,
     ];
 
+    // Hitung berapa banyak baris yang cocok dengan indikator code
     const codeLineCount = lines.filter(line => 
       codeIndicators.some(pattern => pattern.test(line))
     ).length;
 
-    return codeLineCount >= Math.min(lines.length * 0.3, 3);
+    // Minimal 40% baris harus cocok dengan indikator code, atau minimal 3 baris
+    const threshold = Math.max(Math.ceil(lines.length * 0.4), 3);
+    
+    return codeLineCount >= threshold;
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -270,13 +392,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
                 }}
                 className="px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 transition-colors text-sm font-medium"
               >
-                {t('remove')}
+                {t('removeCodeBlock')}
               </button>
               <button
                 onClick={() => setExpandedBlock(null)}
                 className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors text-sm font-medium"
               >
-                {t('close')}
+                {t('closePreview')}
               </button>
             </div>
           </div>
