@@ -392,13 +392,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
                 }}
                 className="px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 transition-colors text-sm font-medium"
               >
-                {t('removeCodeBlock')}
+                {t('remove')}
               </button>
               <button
                 onClick={() => setExpandedBlock(null)}
                 className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors text-sm font-medium"
               >
-                {t('closePreview')}
+                {t('close')}
               </button>
             </div>
           </div>
