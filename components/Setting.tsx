@@ -87,7 +87,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
              <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
                 <h3 className="text-lg font-semibold text-white">{t('aboutTitle', { appName: t('appName') })}</h3>
                 <p className="text-sm text-gray-400 mt-4">{t('aboutDescription')}</p>
-                 <p className="text-xs text-gray-500 mt-4">{t('aboutVersion')}: 1.0.0</p>
+                 <p className="text-xs text-gray-500 mt-4">{t('aboutVersion')}: 1.2.2</p>
 
                 <div className="mt-6 pt-6 border-t border-gray-700/50">
                     <h4 className="text-sm font-medium text-gray-300">{t('createdBy')}</h4>

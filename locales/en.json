@@ -54,6 +54,20 @@
   "instagram": "Instagram",
   "emailSupport": "Email",
   "save": "Save",
-"editingNote": "Editing message — only 1 message can be edited at a time."
+"editingNote": "Editing message — only 1 message can be edited at a time.",
+"code": "Code",
+"preview": "Preview",
+"minimize": "Minimize",
+"restore": "Restore",
+"fullscreen": "Fullscreen",
+"exitFullscreen": "Exit Fullscreen",
+"runCode": "Run Code",
+"running": "Running...",
+"clickToRun": "Click \"Run Code\" to execute the program",
+"executingCode": "Executing code...",
+"error": "Error",
+"output": "Output",
+"programSuccess": "Program executed successfully with no output.",
+"poweredByPiston": "Powered by Piston API"
 
 }

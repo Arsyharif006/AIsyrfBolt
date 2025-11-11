@@ -30,7 +30,15 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
     });
   };
   
-  const isPreviewable = language.toLowerCase() === 'html';
+  // Daftar bahasa yang bisa di-preview (Pascal dihapus karena tidak stabil)
+  const previewableLanguages = [
+    'html', 'python', 'cpp', 'c', 'c++',
+    'java', 'javascript', 'typescript', 'php', 'ruby',
+    'go', 'rust', 'csharp', 'swift', 'kotlin', 'js', 'ts'
+  ];
+  const normalizedLang = language.toLowerCase();
+  const isPreviewable = previewableLanguages.includes(normalizedLang);
+  
   const isFullScreen = previewMode === 'fullscreen';
   const isMinimized = previewMode === 'minimized';
 
@@ -53,14 +61,14 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
                 <div className="flex items-center text-xs text-gray-400 rounded-md p-0.5 bg-gray-700">
                     <button 
                       onClick={() => setView('code')} 
-                      title="Code" 
+                      title={t('code')} 
                       className={`p-1 rounded-sm transition-colors ${view === 'code' ? 'bg-gray-600 text-white' : 'hover:bg-gray-600/50'}`}
                     >
                       <FiCode  />
                     </button>
                     <button 
                       onClick={() => setView('preview')} 
-                      title="Preview" 
+                      title={t('preview')} 
                       className={`p-1 rounded-sm transition-colors ${view === 'preview' ? 'bg-gray-600 text-white' : 'hover:bg-gray-600/50'}`}
                     >
                       <FiEye  />
@@ -114,8 +122,14 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
             <code className="text-white">{code}</code>
         </pre>
       ) : (
-        <div className={`w-full resize-y overflow-auto rounded-b-lg ${isMinimized ? 'hidden' : ''} ${isFullScreen ? 'flex-grow' : 'h-64'}`}>
-            <Preview html={code} css="" js="" />
+        <div className={`w-full overflow-auto rounded-b-lg ${isMinimized ? 'hidden' : ''} ${isFullScreen ? 'flex-grow' : 'min-h-[16rem] h-64'}`}>
+            <Preview 
+              html={normalizedLang === 'html' ? code : ''} 
+              css="" 
+              js="" 
+              language={normalizedLang}
+              code={code}
+            />
         </div>
       )}
     </div>

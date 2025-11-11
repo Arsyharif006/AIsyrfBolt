@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Conversation, Message, MessageSender } from './types';
 import { HiOutlineMenuAlt3 } from 'react-icons/hi';
+import { FiArrowDown } from 'react-icons/fi';
 import * as storage from './services/storageService';
 import { sendMessageToWebhook } from './services/n8nService';
 import { Sidebar } from './components/Sidebar';
@@ -18,7 +19,9 @@ function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false); // Mobile overlay state
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // Desktop collapse state
   const [view, setView] = useState<'chat' | 'settings'>('chat');
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mainContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setConversations(storage.getConversations());
@@ -29,6 +32,25 @@ function App() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [conversations, activeConversationId, view]);
+
+  // Handle scroll button visibility
+  useEffect(() => {
+    const container = mainContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
+      setShowScrollButton(!isNearBottom && scrollTop > 300);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === activeConversationId) || null;
@@ -242,17 +264,18 @@ function App() {
           <Settings onClose={() => setView('chat')} onDeleteAll={handleDeleteAllConversations} />
         ) : (
           <>
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+            <main ref={mainContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative">
               <div className="max-w-4xl mx-auto h-full flex flex-col">
                 {activeConversation && activeConversation.messages.length > 0 ? (
                   <div className="flex flex-col gap-6">
-                    {activeConversation.messages.map((msg) => (
+                    {activeConversation.messages.map((msg, index) => (
                       <ChatMessage
                         key={msg.id}
                         message={msg}
                         isLoading={isLoading && msg.sender === MessageSender.AI && msg.text === '...'}
                         onResendMessage={handleResendMessage}
                         onEditMessage={handleEditMessage}
+                        shouldHideButtons={activeConversation.messages.length - index > 10}
                       />
                     ))}
                     <div ref={messagesEndRef} />
@@ -261,6 +284,17 @@ function App() {
                   <Welcome onPromptClick={handlePromptClick} />
                 )}
               </div>
+
+              {/* Scroll to Bottom Button */}
+              {showScrollButton && (
+                <button
+                  onClick={scrollToBottom}
+                  className="fixed bottom-24 right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50"
+                  aria-label="Scroll to bottom"
+                >
+                  <FiArrowDown size={20} />
+                </button>
+              )}
             </main>
             <div className="px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8 bg-gray-900">
               <div className="max-w-4xl mx-auto">

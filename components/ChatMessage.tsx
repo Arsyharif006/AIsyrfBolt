@@ -11,6 +11,7 @@ interface ChatMessageProps {
   isLoading: boolean;
   onResendMessage: (message: string) => void;
   onEditMessage?: (messageId: string, newText: string) => void;
+  shouldHideButtons?: boolean;
 }
 
 // ✅ Global edit manager agar hanya 1 bubble bisa diedit
@@ -183,6 +184,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   isLoading,
   onResendMessage,
   onEditMessage,
+  shouldHideButtons = false,
 }) => {
   const [isEditingLocal, setIsEditingLocal] = useState(false);
   const [editText, setEditText] = useState(message.text);
@@ -278,30 +280,34 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             )}
 
             {/* Ikon Refresh & Edit - Desktop Only */}
-            <button
-              onClick={() => onResendMessage(message.text)}
-              title="Resend"
-              disabled={anyEditingActive}
-              className={`hidden sm:block absolute -left-10 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${anyEditingActive
-                  ? 'opacity-40 cursor-not-allowed'
-                  : 'opacity-0 group-hover:opacity-100 hover:bg-gray-700 text-gray-400 hover:text-white'
-                }`}
-            >
-              <FiRefreshCw size={16} />
-            </button>
+            {!shouldHideButtons && (
+              <>
+                <button
+                  onClick={() => onResendMessage(message.text)}
+                  title="Resend"
+                  disabled={anyEditingActive}
+                  className={`hidden sm:block absolute -left-10 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${anyEditingActive
+                      ? 'opacity-40 cursor-not-allowed'
+                      : 'opacity-0 group-hover:opacity-100 hover:bg-gray-700 text-gray-400 hover:text-white'
+                    }`}
+                >
+                  <FiRefreshCw size={16} />
+                </button>
 
-            {!isEditingLocal && (
-              <button
-                onClick={startEditing}
-                title="Edit"
-                disabled={anyEditingActive}
-                className={`hidden sm:block absolute -left-10 top-[65%] p-1.5 rounded-full transition ${anyEditingActive
-                    ? 'opacity-40 cursor-not-allowed'
-                    : 'opacity-0 group-hover:opacity-100 hover:bg-gray-700 text-gray-400 hover:text-white'
-                  }`}
-              >
-                <FiEdit3 size={16} />
-              </button>
+                {!isEditingLocal && (
+                  <button
+                    onClick={startEditing}
+                    title="Edit"
+                    disabled={anyEditingActive}
+                    className={`hidden sm:block absolute -left-10 top-[65%] p-1.5 rounded-full transition ${anyEditingActive
+                        ? 'opacity-40 cursor-not-allowed'
+                        : 'opacity-0 group-hover:opacity-100 hover:bg-gray-700 text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    <FiEdit3 size={16} />
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -312,7 +318,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         </div>
 
         {/* Tombol Mobile - Di Bawah Bubble */}
-        {!isEditingLocal && (
+        {!isEditingLocal && !shouldHideButtons && (
           <div className="flex sm:hidden text-xs">
             <button
               onClick={() => onResendMessage(message.text)}

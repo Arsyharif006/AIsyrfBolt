@@ -54,6 +54,20 @@
   "instagram": "Instagram",
   "emailSupport": "Email",
   "save": "Simpan",
-"editingNote": "Mengedit pesan — hanya 1 pesan dapat diedit sekaligus."
+"editingNote": "Mengedit pesan — hanya 1 pesan dapat diedit sekaligus.",
+"code": "Kode",
+"preview": "Pratinjau",
+"minimize": "Minimalkan",
+"restore": "Pulihkan",
+"fullscreen": "Layar Penuh",
+"exitFullscreen": "Keluar Layar Penuh",
+"runCode": "Jalankan Kode",
+"running": "Menjalankan...",
+"clickToRun": "Klik \"Jalankan Kode\" untuk mengeksekusi program",
+"executingCode": "Mengeksekusi kode...",
+"error": "Error",
+"output": "Output",
+"programSuccess": "Program berhasil dijalankan tanpa output.",
+"poweredByPiston": "Didukung oleh Piston API"
 
 }
