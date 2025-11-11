@@ -244,7 +244,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             className={`transition-all duration-200 ${isEditingLocal
                 ? 'w-full sm:w-3/4 bg-blue-700/70'
                 : 'max-w-[85%] sm:max-w-xl lg:max-w-3xl bg-blue-600'
-              } px-4 sm:px-5 py-3 rounded-2xl rounded-br-none group relative`}
+              } px-4 sm:px-5 py-3 rounded-2xl rounded-br-none group relative overflow-hidden`}
           >
             {isEditingLocal ? (
               <div className="flex flex-col gap-3">
@@ -274,7 +274,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </div>
               </div>
             ) : (
-              <p className="whitespace-pre-wrap text-white text-sm sm:text-base leading-relaxed">
+              <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere text-white text-sm sm:text-base leading-relaxed">
                 {message.text}
               </p>
             )}
@@ -385,7 +385,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           {aiResponseParts.map((part, index) => {
             if (part.type === 'text') {
               return (
-                <p key={index} className="whitespace-pre-wrap leading-relaxed">
+                <p key={index} className="whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed">
                   {part.content as string}
                 </p>
               );

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { FiPlay, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import React, { useState, useMemo, useEffect } from 'react';
+import { FiPlay, FiLoader, FiAlertCircle, FiInfo, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useLocalization } from '../contexts/LocalizationContext';
 
 interface PreviewProps {
@@ -37,10 +37,36 @@ export const Preview: React.FC<PreviewProps> = ({
     const [isRunning, setIsRunning] = useState(false);
     const [error, setError] = useState('');
     const [hasRun, setHasRun] = useState(false);
+    const [userInput, setUserInput] = useState('');
+    const [showInput, setShowInput] = useState(false);
+    const [needsInput, setNeedsInput] = useState(false);
     const { t } = useLocalization();
 
     const normalizedLang = language.toLowerCase();
     const isCompiledLanguage = Object.keys(SUPPORTED_LANGUAGES).includes(normalizedLang);
+
+    // Deteksi apakah code memerlukan input
+    useEffect(() => {
+        const codeToCheck = code || html;
+        const inputPatterns = [
+            /scanf/i,           // C
+            /cin\s*>>/i,        // C++
+            /input\s*\(/i,      // Python
+            /Scanner/i,         // Java
+            /readLine/i,        // Kotlin
+            /gets/i,            // Ruby, C
+            /readline/i,        // PHP
+            /Console\.ReadLine/i, // C#
+        ];
+        
+        const hasInputPattern = inputPatterns.some(pattern => pattern.test(codeToCheck));
+        setNeedsInput(hasInputPattern);
+        
+        // Auto-show input jika terdeteksi memerlukan input
+        if (hasInputPattern && !hasRun) {
+            setShowInput(true);
+        }
+    }, [code, html, hasRun]);
 
     const srcDoc = useMemo(() => {
         if (!isCompiledLanguage) {
@@ -89,7 +115,7 @@ export const Preview: React.FC<PreviewProps> = ({
                             content: code || html
                         }
                     ],
-                    stdin: "",
+                    stdin: userInput,
                     args: [],
                     compile_timeout: 10000,
                     run_timeout: 3000
@@ -148,20 +174,43 @@ export const Preview: React.FC<PreviewProps> = ({
         return extensions[lang] || 'main.txt';
     };
 
+    const getInputExample = () => {
+        const examples: Record<string, string> = {
+            c: 'Example for scanf("%d %d", &a, &b):\n5 10\n\nOr one per line:\n5\n10',
+            cpp: 'Example for cin >> a >> b:\n5 10\n\nOr one per line:\n5\n10',
+            python: 'Example for input():\nJohn\n25\nNew York',
+            java: 'Example for Scanner:\n42\nHello World',
+        };
+        return examples[normalizedLang] || t('enterInput');
+    };
+
     // Render untuk bahasa pemrograman
     if (isCompiledLanguage) {
         return (
             <div className="w-full h-full bg-gray-900 text-white flex flex-col">
-                <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-2">
+                <div className="bg-gray-800 px-3 sm:px-4 py-3 border-b border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 flex-shrink-0">
+                    <div className="flex items-center justify-between sm:justify-start gap-2">
                         <span className="text-sm text-gray-400">
-                            {SUPPORTED_LANGUAGES[normalizedLang as keyof typeof SUPPORTED_LANGUAGES]?.name || language} Output
+                            {SUPPORTED_LANGUAGES[normalizedLang as keyof typeof SUPPORTED_LANGUAGES]?.name || language} {t('output')}
                         </span>
+                        {needsInput && (
+                            <button
+                                onClick={() => setShowInput(!showInput)}
+                                title={showInput ? t('hideInput') : t('showInput')}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    showInput 
+                                        ? 'bg-blue-600 text-white' 
+                                        : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-white'
+                                }`}
+                            >
+                                {showInput ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                            </button>
+                        )}
                     </div>
                     <button
                         onClick={runCode}
                         disabled={isRunning}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors text-sm font-medium"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors text-sm font-medium w-full sm:w-auto"
                     >
                         {isRunning ? (
                             <>
@@ -177,12 +226,65 @@ export const Preview: React.FC<PreviewProps> = ({
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-auto p-4">
-                    {!hasRun && (
+                <div className="flex-1 overflow-auto p-3 sm:p-4">
+                    {showInput && (
+                        <div className="bg-gray-800 rounded-lg p-3 sm:p-4 mb-4 border-2 border-blue-500/30">
+                            <div className="flex items-start gap-2 mb-3">
+                                <FiInfo className="text-blue-400 flex-shrink-0 mt-1" size={18} />
+                                <div className="flex-1">
+                                    <label className="block text-sm font-semibold text-blue-400 mb-1">
+                                        {t('prepareAllInputs')}
+                                    </label>
+                                    <p className="text-xs text-gray-400 leading-relaxed">
+                                        {t('inputInstruction')}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <textarea
+                                value={userInput}
+                                onChange={(e) => setUserInput(e.target.value)}
+                                placeholder={getInputExample()}
+                                className="w-full bg-gray-900 text-white rounded border border-gray-700 p-3 font-mono text-sm resize-y min-h-[100px] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            />
+                            
+                            <div className="mt-3 bg-gray-900/50 rounded p-3 border border-gray-700/50">
+                                <p className="text-xs font-semibold text-gray-400 mb-2 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                    {t('howItWorks')}
+                                </p>
+                                <ul className="text-xs text-gray-500 space-y-1.5 ml-3">
+                                    <li>• {t('inputTip1')}</li>
+                                    <li>• {t('inputTip2')}</li>
+                                    <li>• {t('inputTip3')}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    {needsInput && !hasRun && (
+                        <div className="bg-yellow-600/10 border border-yellow-600/30 rounded-lg p-3 mb-4 flex items-start gap-2">
+                            <FiInfo className="text-yellow-400 flex-shrink-0 mt-0.5" size={16} />
+                            <p className="text-sm text-yellow-400">
+                                {t('thisCodeNeedsInput')}
+                            </p>
+                        </div>
+                    )}
+
+                    {!hasRun && !showInput && (
                         <div className="flex items-center justify-center h-full text-gray-500">
-                            <div className="text-center">
+                            <div className="text-center px-4">
                                 <FiPlay className="mx-auto mb-2" size={32} />
-                                <p>{t('clickToRun')}</p>
+                                <p className="text-sm sm:text-base">{t('clickToRun')}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {!hasRun && showInput && (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                            <div className="text-center px-4">
+                                <FiPlay className="mx-auto mb-2" size={32} />
+                                <p className="text-sm sm:text-base">{t('enterInputsAndRun')}</p>
                             </div>
                         </div>
                     )}
@@ -195,7 +297,7 @@ export const Preview: React.FC<PreviewProps> = ({
                     )}
 
                     {error && (
-                        <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 mb-4">
+                        <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 sm:p-4 mb-4">
                             <div className="flex items-start gap-2">
                                 <FiAlertCircle className="text-red-400 flex-shrink-0 mt-1" />
                                 <div className="flex-1 min-w-0">
@@ -209,7 +311,7 @@ export const Preview: React.FC<PreviewProps> = ({
                     )}
 
                     {output && !isRunning && (
-                        <div className="bg-gray-800 rounded-lg p-4">
+                        <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
                             <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">{t('output')}:</p>
                             <pre className="text-sm text-green-400 whitespace-pre-wrap font-mono leading-relaxed break-words">
                                 {output}
@@ -218,7 +320,7 @@ export const Preview: React.FC<PreviewProps> = ({
                     )}
                 </div>
 
-                <div className="bg-gray-800 px-4 py-2 border-t border-gray-700 text-xs text-gray-500 flex-shrink-0">
+                <div className="bg-gray-800 px-3 sm:px-4 py-2 border-t border-gray-700 text-xs text-gray-500 flex-shrink-0">
                    {t('poweredByPiston')}
                 </div>
             </div>
