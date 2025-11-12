@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Conversation, Message, MessageSender } from './types';
+import { Conversation, Message, MessageSender } from '../types';
 import { HiOutlineMenuAlt3 } from 'react-icons/hi';
 import { FiArrowDown } from 'react-icons/fi';
 import * as storage from './services/storageService';
@@ -16,10 +16,11 @@ function App() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSidebarOpen, setSidebarOpen] = useState(false); // Mobile overlay state
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // Desktop collapse state
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [view, setView] = useState<'chat' | 'settings'>('chat');
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [canvasWidth, setCanvasWidth] = useState(0); // Track canvas width for layout adjustment
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mainContainerRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +34,6 @@ function App() {
     }
   }, [conversations, activeConversationId, view]);
 
-  // Handle scroll button visibility
   useEffect(() => {
     const container = mainContainerRef.current;
     if (!container) return;
@@ -46,6 +46,16 @@ function App() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Listen for canvas state changes
+  useEffect(() => {
+    const handleCanvasChange = ((e: CustomEvent) => {
+      setCanvasWidth(e.detail.isOpen ? e.detail.width : 0);
+    }) as EventListener;
+
+    window.addEventListener('canvas-state-change', handleCanvasChange);
+    return () => window.removeEventListener('canvas-state-change', handleCanvasChange);
   }, []);
 
   const scrollToBottom = () => {
@@ -153,35 +163,27 @@ function App() {
     const conversationId = activeConversationId;
     if (!conversationId || !activeConversation) return;
 
-    // Find the exact index of the message being edited.
     const messageIndex = activeConversation.messages.findIndex(m => m.id === messageId);
     if (messageIndex === -1) {
       console.error("Could not find the message to edit.");
       return;
     }
 
-    // Remove the edited message and all subsequent messages
-    // to start a new branch of the conversation, as requested.
     const truncatedMessages = activeConversation.messages.slice(0, messageIndex);
 
-    // Create the new user message with the edited text, reusing the original ID.
     const editedUserMessage: Message = {
       id: messageId,
       text: newText,
       sender: MessageSender.User,
     };
 
-    // Create a temporary loading message for the AI's new response.
     const aiLoadingMessage: Message = {
       id: crypto.randomUUID(),
       text: '...',
       sender: MessageSender.AI,
     };
 
-    // Immediately update the UI to show the new conversation branch.
     const updatedMessages = [...truncatedMessages, editedUserMessage, aiLoadingMessage];
-    
-    // Create a snapshot of the conversations before the API call for potential rollback.
     const previousConversations = conversations;
 
     setConversations(prev =>
@@ -194,7 +196,6 @@ function App() {
     try {
       const aiResponseText = await sendMessageToWebhook(newText);
       
-      // Replace the loading message with the actual AI response.
       setConversations(prev => {
         const finalConvs = prev.map(conv => {
           if (conv.id === conversationId) {
@@ -202,7 +203,7 @@ function App() {
               m.id === aiLoadingMessage.id ? { ...m, text: aiResponseText } : m
             );
             const finalConversation = { ...conv, messages: finalMessages };
-            storage.saveConversation(finalConversation); // Save the final state
+            storage.saveConversation(finalConversation);
             return finalConversation;
           }
           return conv;
@@ -212,7 +213,6 @@ function App() {
 
     } catch (error) {
       console.error("Failed to get AI response after editing:", error);
-      // On error, revert the conversation to its state before the edit.
       setConversations(previousConversations);
     } finally {
       setIsLoading(false);
@@ -233,6 +233,19 @@ function App() {
     [handleSendMessage]
   );
 
+  // Calculate main content width based on sidebar and canvas state
+  const mainContentStyle = useMemo(() => {
+    if (window.innerWidth < 768) return {}; // Mobile: full width
+    
+    const sidebarWidth = isSidebarCollapsed ? 64 : 256; // 16 or 64 in pixels
+    const rightSpace = canvasWidth; // Canvas width in percentage
+    
+    return {
+      marginRight: `${rightSpace}%`,
+      transition: 'margin-right 0.2s ease-in-out'
+    };
+  }, [isSidebarCollapsed, canvasWidth]);
+
   return (
     <div className="flex h-screen bg-gray-800 font-sans">
       <Sidebar
@@ -250,14 +263,14 @@ function App() {
         onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
       />
 
-      <div className="flex-1 flex flex-col bg-gray-900 text-white overflow-hidden">
+      <div className="flex-1 flex flex-col bg-gray-900 text-white overflow-hidden" style={mainContentStyle}>
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 bg-gray-900 text-white border-b border-gray-700/50 flex-shrink-0">
           <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-gray-300 hover:text-white">
-              <HiOutlineMenuAlt3  />
+              <HiOutlineMenuAlt3 />
           </button>
           <h1 className="text-lg font-semibold truncate">{activeConversation?.title || t('newChat')}</h1>
-          <div className="w-6"></div> {/* Spacer to balance the burger button */}
+          <div className="w-6"></div>
         </header>
 
         {view === 'settings' ? (
@@ -290,6 +303,10 @@ function App() {
                 <button
                   onClick={scrollToBottom}
                   className="fixed bottom-24 right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50"
+                  style={{ 
+                    right: canvasWidth > 0 ? `calc(${canvasWidth}% + 2rem)` : '2rem',
+                    transition: 'right 0.2s ease-in-out'
+                  }}
                   aria-label="Scroll to bottom"
                 >
                   <FiArrowDown size={20} />

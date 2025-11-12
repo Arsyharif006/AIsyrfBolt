@@ -1,5 +1,5 @@
 
-import { Conversation } from '../types';
+import { Conversation } from '../../types';
 
 const CONVERSATIONS_KEY = 'vibe-ai-conversations';
 

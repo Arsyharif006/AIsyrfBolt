@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Conversation } from '../types';
+import { Conversation } from '../../types';
 import { useLocalization } from '../contexts/LocalizationContext';
 import { HiOutlineMenuAlt3, HiTrash } from 'react-icons/hi';
 import { IoClose, IoAddSharp } from 'react-icons/io5';
@@ -49,16 +49,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const handleSelectConv = (id: string) => {
+    // ✅ Emit event untuk close canvas sebelum pindah conversation
+    window.dispatchEvent(new CustomEvent('conversation-changed', { detail: { conversationId: id } }));
+    
     onSelectConversation(id);
     onClose();
   };
 
   const handleNewChat = () => {
+    // ✅ Emit event untuk close canvas ketika buat chat baru
+    window.dispatchEvent(new CustomEvent('canvas-state-change', { detail: { isOpen: false, width: 0, messageId: null } }));
+    
     onNewConversation();
     onClose();
   };
 
   const handleSettings = () => {
+    // ✅ Emit event untuk close semua canvas
+    window.dispatchEvent(new CustomEvent('settings-opened'));
+    
     onOpenSettings();
     onClose();
   };
@@ -124,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   title={isCollapsed ? conv.title : ''}
                 >
                   {isCollapsed ? (
-                    < IoChatbubblesOutline/>
+                    <IoChatbubblesOutline/>
                   ) : (
                     <>
                       <span className="truncate flex-1">{conv.title}</span>
