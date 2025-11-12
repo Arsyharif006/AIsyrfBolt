@@ -112,6 +112,17 @@
   "rows": "baris",
   "downloadExcel": "Unduh Excel",
   "downloading": "Mengunduh...",
-  "downloaded": "Terunduh!"
-
+  "downloaded": "Terunduh!",
+  "updateModalTitle": "Apa Yang Baru?",
+  "version": "Versi",
+  "updateCanvasFeature": "Canvas Interaktif",
+  "updateCanvasDescription": "Buka kode dalam canvas yang dapat diubah ukurannya dengan pratinjau langsung dan eksekusi kode",
+  "updateCodeExecution": "Eksekusi Kode Multi-Bahasa",
+  "updateCodeExecutionDescription": "Jalankan Python, C++, Java, JavaScript, dan 10+ bahasa lainnya langsung di browser",
+  "updateTableExport": "Ekspor Tabel ke Excel",
+  "updateTableExportDescription": "Unduh tabel yang dihasilkan AI langsung ke file Excel dengan satu klik",
+  "tip": "Tips",
+  "updateTip": "Coba minta saya untuk membuat contoh kode interaktif dan buka di canvas untuk pengalaman yang lebih baik!",
+  "dontShowAgain": "Jangan tampilkan lagi",
+  "gotIt": "Mengerti"
 }

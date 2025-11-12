@@ -9,6 +9,7 @@ import { ChatInput } from './components/ChatInput';
 import { ChatMessage } from './components/ChatMessage';
 import { Welcome } from './components/Welcome';
 import { Settings } from './components/Setting';
+import { UpdateModal } from './components/Update';
 import { useLocalization } from './contexts/LocalizationContext';
 
 function App() {
@@ -248,6 +249,12 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gray-800 font-sans">
+      {/* Update Modal */}
+      <UpdateModal 
+        version="3.5.2" 
+        updateDate="November 2025"
+      />
+
       <Sidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
