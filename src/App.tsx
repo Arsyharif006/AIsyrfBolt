@@ -10,10 +10,14 @@ import { ChatMessage } from './components/ChatMessage';
 import { Welcome } from './components/Welcome';
 import { Settings } from './components/Setting';
 import { UpdateModal } from './components/Update';
+import { Auth } from './components/Auth';
 import { useLocalization } from './contexts/LocalizationContext';
 
 function App() {
   const { t } = useLocalization();
+  
+  // ALL STATE DECLARATIONS MUST BE AT THE TOP
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,21 +25,34 @@ function App() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [view, setView] = useState<'chat' | 'settings'>('chat');
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [canvasWidth, setCanvasWidth] = useState(0); // Track canvas width for layout adjustment
+  const [canvasWidth, setCanvasWidth] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mainContainerRef = useRef<HTMLDivElement>(null);
 
+  // ALL EFFECTS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURN
+  // Check authentication status on mount
   useEffect(() => {
-    setConversations(storage.getConversations());
+    const authToken = localStorage.getItem('auth-token');
+    if (authToken) {
+      setIsAuthenticated(true);
+    }
   }, []);
 
   useEffect(() => {
-    if (view === 'chat') {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isAuthenticated) {
+      setConversations(storage.getConversations());
     }
-  }, [conversations, activeConversationId, view]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (isAuthenticated && view === 'chat') {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [conversations, activeConversationId, view, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const container = mainContainerRef.current;
     if (!container) return;
 
@@ -47,21 +64,24 @@ function App() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isAuthenticated]);
 
   // Listen for canvas state changes
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const handleCanvasChange = ((e: CustomEvent) => {
       setCanvasWidth(e.detail.isOpen ? e.detail.width : 0);
     }) as EventListener;
 
     window.addEventListener('canvas-state-change', handleCanvasChange);
     return () => window.removeEventListener('canvas-state-change', handleCanvasChange);
-  }, []);
+  }, [isAuthenticated]);
 
-  const scrollToBottom = () => {
+  // ALL CALLBACKS AND MEMOIZED VALUES
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === activeConversationId) || null;
@@ -94,6 +114,19 @@ function App() {
     setConversations([]);
     setActiveConversationId(null);
     setView('chat');
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    // Remove auth token from localStorage
+    localStorage.removeItem('auth-token');
+    
+    // Reset all state
+    setIsAuthenticated(false);
+    setConversations([]);
+    setActiveConversationId(null);
+    setView('chat');
+    setSidebarOpen(false);
+    setSidebarCollapsed(false);
   }, []);
 
   const handleSendMessage = useCallback(
@@ -234,12 +267,11 @@ function App() {
     [handleSendMessage]
   );
 
-  // Calculate main content width based on sidebar and canvas state
   const mainContentStyle = useMemo(() => {
-    if (window.innerWidth < 768) return {}; // Mobile: full width
+    if (window.innerWidth < 768) return {};
     
-    const sidebarWidth = isSidebarCollapsed ? 64 : 256; // 16 or 64 in pixels
-    const rightSpace = canvasWidth; // Canvas width in percentage
+    const sidebarWidth = isSidebarCollapsed ? 64 : 256;
+    const rightSpace = canvasWidth;
     
     return {
       marginRight: `${rightSpace}%`,
@@ -247,9 +279,19 @@ function App() {
     };
   }, [isSidebarCollapsed, canvasWidth]);
 
+  const handleAuthSuccess = useCallback(() => {
+    localStorage.setItem('auth-token', 'dummy-token');
+    setIsAuthenticated(true);
+  }, []);
+
+  // NOW WE CAN SAFELY DO CONDITIONAL RENDERING
+  if (!isAuthenticated) {
+    return <Auth onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  // Main App Render (only when authenticated)
   return (
     <div className="flex h-screen bg-gray-800 font-sans">
-      {/* Update Modal */}
       <UpdateModal 
         version="3.5.2" 
         updateDate="November 2025"
@@ -271,7 +313,6 @@ function App() {
       />
 
       <div className="flex-1 flex flex-col bg-gray-900 text-white overflow-hidden" style={mainContentStyle}>
-        {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 bg-gray-900 text-white border-b border-gray-700/50 flex-shrink-0">
           <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-gray-300 hover:text-white">
               <HiOutlineMenuAlt3 />
@@ -281,7 +322,11 @@ function App() {
         </header>
 
         {view === 'settings' ? (
-          <Settings onClose={() => setView('chat')} onDeleteAll={handleDeleteAllConversations} />
+          <Settings 
+            onClose={() => setView('chat')} 
+            onDeleteAll={handleDeleteAllConversations}
+            onLogout={handleLogout}
+          />
         ) : (
           <>
             <main ref={mainContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative">
@@ -305,7 +350,6 @@ function App() {
                 )}
               </div>
 
-              {/* Scroll to Bottom Button */}
               {showScrollButton && (
                 <button
                   onClick={scrollToBottom}

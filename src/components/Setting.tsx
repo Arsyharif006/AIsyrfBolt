@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocalization } from '../contexts/LocalizationContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -7,81 +6,232 @@ import { Modal } from './Modal';
 interface SettingsProps {
   onClose: () => void;
   onDeleteAll: () => void;
+  onLogout: () => void;
 }
 
-type SettingsTab = 'general' | 'account' | 'storage' | 'language' | 'about';
+type SettingsTab = 'general' | 'account' | 'storage' | 'language' | 'about' | 'logout';
 
-export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
+export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll, onLogout }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isLogoutModalOpen, setLogoutModalOpen] = useState(false);
   const { t } = useLocalization();
+  
+  // Temporary interactive states
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
+  const [dataCollection, setDataCollection] = useState(false);
 
   const handleDelete = () => {
     setDeleteModalOpen(true);
   };
   
   const confirmDeleteAll = () => {
-      onDeleteAll();
-      setDeleteModalOpen(false);
-  }
+    onDeleteAll();
+    setDeleteModalOpen(false);
+  };
+
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+  };
+
+  const confirmLogout = () => {
+    onLogout();
+    setLogoutModalOpen(false);
+  };
+
+  const ToggleSwitch: React.FC<{ enabled: boolean; onChange: (value: boolean) => void }> = ({ enabled, onChange }) => (
+    <button
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        enabled ? 'bg-blue-600' : 'bg-gray-700'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          enabled ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  );
 
   const renderContent = () => {
     switch (activeTab) {
       case 'general':
         return (
-          <div className="space-y-8">
+          <div className="space-y-6">
+            {/* Profile Section */}
             <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
-                <h3 className="text-lg font-semibold text-white">{t('generalTitle')}</h3>
-                <p className="text-sm text-gray-400 mt-1">{t('generalDescription')}</p>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300">{t('generalFullName')}</label>
-                        <input type="text" className="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300">{t('generalNickname')}</label>
-                        <input type="text" className="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                    </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-white">{t('generalTitle')}</h3>
                 </div>
-                 <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-300">{t('generalPreferences')}</label>
-                    <textarea rows={4} placeholder={t('generalPreferencesPlaceholder')} className="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none"></textarea>
+                <p className="text-sm text-gray-400 mb-6">{t('generalDescription')}</p>
+                
+                <div className="space-y-6">
+                  {/* Name Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">{t('generalFullName')}</label>
+                          <input 
+                            type="text" 
+                            placeholder="John Doe"
+                            className="w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" 
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">{t('generalNickname')}</label>
+                          <input 
+                            type="text"
+                            placeholder="How AI should call you"
+                            className="w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" 
+                          />
+                      </div>
+                  </div>
+
+                  {/* Preferences */}
+                  <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('generalPreferences')}</label>
+                      <textarea 
+                        rows={4} 
+                        placeholder={t('generalPreferencesPlaceholder')} 
+                        className="w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                      />
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end">
+                    <button className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors">
+                      Save Changes
+                    </button>
+                  </div>
                 </div>
             </div>
           </div>
         );
+
       case 'account':
         return (
-             <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
+          <div className="space-y-6">
+            {/* Account Info */}
+            <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
+              <div className="mb-4">
                 <h3 className="text-lg font-semibold text-white">{t('accountTitle')}</h3>
-                <p className="text-sm text-gray-400 mt-1">{t('accountDescription')}</p>
+              </div>
+              <p className="text-sm text-gray-400 mb-6">{t('accountDescription')}</p>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  value="user@example.com"
+                  disabled
+                  className="w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2.5 px-3 text-gray-400 text-sm cursor-not-allowed" 
+                />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed at this time</p>
+              </div>
             </div>
+
+            {/* Notifications */}
+            <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-white">Notifications</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-white">Email Notifications</p>
+                    <p className="text-xs text-gray-400">Receive updates via email</p>
+                  </div>
+                  <ToggleSwitch enabled={emailNotifications} onChange={setEmailNotifications} />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-white">Push Notifications</p>
+                    <p className="text-xs text-gray-400">Get notified in your browser</p>
+                  </div>
+                  <ToggleSwitch enabled={pushNotifications} onChange={setPushNotifications} />
+                </div>
+              </div>
+            </div>
+          </div>
         );
+
        case 'storage':
         return (
-             <div className="p-6 bg-gray-800 border border-red-500/30 rounded-lg">
-                <h3 className="text-lg font-semibold text-red-300">{t('storageTitle')}</h3>
-                <p className="text-sm text-gray-400 mt-1">{t('storageDescription')}</p>
-                <div className="mt-4">
-                     <button
-                      onClick={handleDelete}
-                      className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-md hover:bg-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500"
-                    >
-                      {t('deleteAllConversations')}
-                    </button>
+          <div className="space-y-6">
+            {/* Storage Stats */}
+            <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-white">Storage Usage</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-400">Conversations</span>
+                    <span className="text-white">2.4 MB / 100 MB</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '2.4%' }}></div>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div className="p-4 bg-gray-900 rounded-lg">
+                    <p className="text-xs text-gray-400 mb-1">Total Conversations</p>
+                    <p className="text-2xl font-bold text-white">24</p>
+                  </div>
+                  <div className="p-4 bg-gray-900 rounded-lg">
+                    <p className="text-xs text-gray-400 mb-1">Total Messages</p>
+                    <p className="text-2xl font-bold text-white">486</p>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Danger Zone */}
+            <div className="p-6 bg-gray-800 border border-red-500/30 rounded-lg">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-red-300">{t('storageTitle')}</h3>
+              </div>
+              <p className="text-sm text-gray-400 mb-6">{t('storageDescription')}</p>
+              <button
+                onClick={handleDelete}
+                className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-md transition-colors"
+              >
+                {t('deleteAllConversations')}
+              </button>
+            </div>
+          </div>
         );
+
         case 'language':
         return (
-             <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
-                <h3 className="text-lg font-semibold text-white">{t('languageTitle')}</h3>
-                <p className="text-sm text-gray-400 mt-1">{t('languageDescription')}</p>
-                 <div className="mt-4 max-w-xs">
-                    <LanguageSwitcher />
-                </div>
+          <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-white">{t('languageTitle')}</h3>
             </div>
+            <p className="text-sm text-gray-400 mb-6">{t('languageDescription')}</p>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-3">Display Language</label>
+                <LanguageSwitcher />
+              </div>
+
+              <div className="p-4 bg-blue-600/10 border border-blue-500/30 rounded-lg">
+                <p className="text-sm text-blue-400">
+                  💡 Tip: Changing the language will update all interface text immediately
+                </p>
+              </div>
+            </div>
+          </div>
         );
+
       case 'about':
         return (
              <div className="p-6 bg-gray-800 border border-gray-700 rounded-lg">
@@ -102,14 +252,38 @@ export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="w-20 text-gray-400">{t('emailSupport')}</span>
-                            <a href="mailto:aisyrfbolt.support@gmail.com" className="text-blue-400 hover:underline">
-                                aisyrfbolt.support@gmail.com
+                            <a href="mailto:syrion.support@gmail.com" className="text-blue-400 hover:underline">
+                                syrion.support@gmail.com
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
         );
+
+      case 'logout':
+        return (
+          <div className="p-6 bg-gray-800 border border-red-500/30 rounded-lg">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-red-300">{t('logout')}</h3>
+            </div>
+            <p className="text-sm text-gray-400 mb-6">Sign out from your account. You can always sign back in anytime.</p>
+            
+            <div className="p-4 bg-red-600/10 border border-red-500/30 rounded-lg mb-6">
+              <p className="text-sm text-red-400">
+                Your conversations will remain saved and will be available when you sign back in.
+              </p>
+            </div>
+
+            <button
+              onClick={handleLogoutClick}
+              className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-md transition-colors"
+            >
+              {t('logout')}
+            </button>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -119,7 +293,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
      <button 
         onClick={() => setActiveTab(tab)}
         className={`
-            flex-shrink-0 text-sm font-medium transition-colors whitespace-nowrap
+            flex items-center gap-3 text-sm font-medium transition-colors whitespace-nowrap
             px-4 py-3 border-b-2
             md:w-full md:text-left md:px-3 md:py-2 md:rounded-md md:border-b-0
             ${activeTab === tab
@@ -128,7 +302,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
             }
         `}
     >
-        {label}
+        <span>{label}</span>
     </button>
   );
 
@@ -137,18 +311,19 @@ export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
         <div className="flex-1 flex flex-col bg-gray-900">
           <header className="p-4 border-b border-gray-700/50 flex items-center justify-between flex-shrink-0">
              <h1 className="text-xl font-semibold text-white">{t('settingsTitle')}</h1>
-             <button onClick={onClose} className="text-sm text-blue-400 hover:underline">
+             <button onClick={onClose} className="text-sm text-blue-400 hover:underline flex items-center gap-2">
                 {t('backToChat')}
              </button>
           </header>
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-            <aside className="flex-shrink-0 bg-gray-900 md:p-4 border-b md:border-r md:border-b-0 border-gray-700/50 md:w-56">
+            <aside className="flex-shrink-0 bg-gray-900 md:p-4 border-b md:border-r md:border-b-0 border-gray-700/50 md:w-64">
                 <nav className="flex flex-row md:flex-col md:space-y-1 overflow-x-auto md:overflow-x-visible px-4 md:px-0 -mx-4 md:mx-0">
                     <NavItem tab="general" label={t('settingsGeneral')} />
                     <NavItem tab="account" label={t('settingsAccount')} />
                     <NavItem tab="storage" label={t('settingsStorage')} />
                     <NavItem tab="language" label={t('settingsLanguage')} />
                     <NavItem tab="about" label={t('settingsAbout')} />
+                    <NavItem tab="logout" label={t('logout')} />
                 </nav>
             </aside>
             <main className="flex-1 overflow-y-auto p-6 md:p-8">
@@ -156,6 +331,8 @@ export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
             </main>
           </div>
         </div>
+        
+        {/* Delete All Modal */}
         <Modal
             isOpen={isDeleteModalOpen}
             onClose={() => setDeleteModalOpen(false)}
@@ -165,6 +342,18 @@ export const Settings: React.FC<SettingsProps> = ({ onClose, onDeleteAll }) => {
             isDestructive
         >
             <p>{t('storageDescription')}</p>
+        </Modal>
+
+        {/* Logout Modal */}
+        <Modal
+            isOpen={isLogoutModalOpen}
+            onClose={() => setLogoutModalOpen(false)}
+            onConfirm={confirmLogout}
+            title={t('logoutConfirm')}
+            confirmText={t('logout')}
+            isDestructive
+        >
+            <p className="text-gray-400">You will be signed out of your account.</p>
         </Modal>
     </>
   );
